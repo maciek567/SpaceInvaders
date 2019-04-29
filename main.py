@@ -6,11 +6,11 @@ class Player(object):
     ship = pygame.image.load('img/ship.png')
 
     def __init__(self, x, y, width, height):
-        self.x = x
+        self.x = x  # coordinates of ship at the beginning
         self.y = y
         self.width = width
         self.height = height
-        self.vel = 5
+        self.vel = 5  # velocity of ship
 
     def draw(self, win):
         win.blit(self.ship, (self.x, self.y))
@@ -32,6 +32,7 @@ class Enemy(object):
         self.move()
         win.blit(self.alien, (self.x, self.y))
 
+    # move in loop from left border to right and then from right to left
     def move(self):
         if self.vel > 0:
             if self.x + self.vel < self.path[1]:
@@ -45,10 +46,27 @@ class Enemy(object):
                 self.vel = self.vel * -1
 
 
+class Projectile(object):
+    def __init__(self, x, y, radius, color):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.color = color
+        self.vel = 2  # velocity of bullet
+
+    def draw(self, win):
+        pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
+
+
+# in every frame display all objects on their current positions
 def redraw_game_window():
     win.blit(bg, (0, 0))
     player.draw(win)
     enemy.draw(win)
+
+    for bullet in projectiles:
+        bullet.draw(win)
+
     pygame.display.update()
 
 
@@ -61,7 +79,12 @@ clock = pygame.time.Clock()
 bg = pygame.image.load('img/sky.jpg')
 player = Player(20, screenHeight - 80, 60, 60)
 enemy = Enemy(20, 20, 60, 60, screenWidth - 80)
+projectiles = []
 
+# Ship can shoot only if this variable is equal to 0. After every successful shoot this variable is incremented,
+# and if reaches 10, then is reduced again to 0. This feature prevent from shooting all projectiles at once
+# which can cause undesirable blurred trail on screen
+canShoot = 0
 
 run = True
 while run:
@@ -71,12 +94,30 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
-    keys = pygame.key.get_pressed()
+    if canShoot > 0:
+        canShoot += 1
+    if canShoot >= 10:
+        canShoot = 0
 
+    # display projectiles until they reach top border of screen
+    # if projectile reaches top border of screen remove it from array so that ship could shoot next ones
+    for projectile in projectiles:
+        if 0 < projectile.y > 0:
+            projectile.y -= projectile.vel
+        else:
+            projectiles.pop(projectiles.index(projectile))
+
+    # handle keys pressed by player (left arrow, right arrow, space)
+    keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT] and player.x > player.vel:
         player.x -= player.vel
     elif keys[pygame.K_RIGHT] and player.x < screenWidth - player.width - player.vel:
         player.x += player.vel
+    if keys[pygame.K_SPACE] and canShoot == 0:
+        if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
+            projectiles.append(Projectile(round(player.x + player.width // 2),
+                                          round(player.y + player.height // 2), 4, (255, 128, 0)))
+        canShoot += 1
 
     redraw_game_window()
 
