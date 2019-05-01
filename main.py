@@ -15,6 +15,8 @@ class Player(object):
     def draw(self, win):
         win.blit(self.ship, (self.x, self.y))
 
+    # when hit : explosion.play()
+
 
 class Enemy(object):
     alien = pygame.image.load('img/alien.png')
@@ -45,6 +47,8 @@ class Enemy(object):
             else:
                 self.vel = self.vel * -1
 
+    # when hit : invaderKilled.play()
+
 
 class Projectile(object):
     def __init__(self, x, y, radius, color):
@@ -52,7 +56,7 @@ class Projectile(object):
         self.y = y
         self.radius = radius
         self.color = color
-        self.vel = 2  # velocity of bullet
+        self.vel = 8  # velocity of bullet
 
     def draw(self, win):
         pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
@@ -77,6 +81,12 @@ pygame.display.set_caption("Space Invaders")
 clock = pygame.time.Clock()
 
 bg = pygame.image.load('img/sky.jpg')
+music = pygame.mixer.music.load('sounds/music1.wav')
+pygame.mixer.music.play(-1)
+shoot = pygame.mixer.Sound('sounds/shoot.wav')
+invaderKilled = pygame.mixer.Sound('sounds/invaderKilled.wav')
+explosion = pygame.mixer.Sound('sounds/explosion.wav')
+
 player = Player(20, screenHeight - 80, 60, 60)
 enemy = Enemy(20, 20, 60, 60, screenWidth - 80)
 projectiles = []
@@ -114,6 +124,7 @@ while run:
     elif keys[pygame.K_RIGHT] and player.x < screenWidth - player.width - player.vel:
         player.x += player.vel
     if keys[pygame.K_SPACE] and canShoot == 0:
+        shoot.play()
         if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
             projectiles.append(Projectile(round(player.x + player.width // 2),
                                           round(player.y + player.height // 2), 4, (255, 128, 0)))
