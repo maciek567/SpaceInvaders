@@ -79,7 +79,7 @@ class Projectile(object):
         self.y = y
         self.radius = radius
         self.color = color
-        self.vel = 6  # velocity of bullet
+        self.vel = 8  # velocity of bullet
 
     def draw(self, win):
         pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
@@ -133,6 +133,12 @@ pygame.display.set_caption("Space Invaders")
 clock = pygame.time.Clock()
 
 bg = pygame.image.load('img/sky.jpg')
+music = pygame.mixer.music.load('sounds/music1.wav')
+pygame.mixer.music.play(-1)
+shoot = pygame.mixer.Sound('sounds/shoot.wav')
+invaderKilled = pygame.mixer.Sound('sounds/invaderKilled.wav')
+explosion = pygame.mixer.Sound('sounds/explosion.wav')
+
 player = Player(20, screenHeight - 80, 60, 60)
 enemy = [[None]*10, [None]*10, [None]*10]
 enemy = draw_block_of_enemies()
