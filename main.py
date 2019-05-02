@@ -1,9 +1,11 @@
 import pygame
+
 pygame.init()
 
 
 class Player(object):
     ship = pygame.image.load('img/ship.png')
+    ship_trans = pygame.image.load('img/ship_trans.png')
 
     def __init__(self, x, y, width, height):
         self.x = x  # coordinates of ship at the beginning
@@ -11,11 +13,28 @@ class Player(object):
         self.width = width
         self.height = height
         self.vel = 5  # velocity of ship
+        self.health = 3
+        self.killed = False
+        self.timeToRecover = 0  # number of fps after ship being killed by alien when ship blink
 
     def draw(self, win):
-        win.blit(self.ship, (self.x, self.y))
+        if not self.killed:
+            win.blit(self.ship, (self.x, self.y))
+        else:
+            if (self.timeToRecover // 5) % 2 == 0:
+                win.blit(self.ship_trans, (self.x, self.y))
+            else:
+                win.blit(self.ship, (self.x, self.y))
+            self.timeToRecover -= 1
+            if self.timeToRecover == 0:
+                self.killed = False
+                self.x = 20
 
-    # when hit : explosion.play()
+    def hit(self):
+        explosion.play()
+        self.health -= 1
+        self.killed = True
+        self.timeToRecover = 60
 
 
 class Enemy(object):
@@ -74,6 +93,17 @@ def redraw_game_window():
     pygame.display.update()
 
 
+def menu():
+    intro = True
+    while intro:
+        for event in pygame.event.get():
+            pygame.quit()
+            quit()
+
+
+#  gameDisplay.fill((255, 255, 255))
+
+
 screenWidth = 800
 screenHeight = 480
 win = pygame.display.set_mode((screenWidth, screenHeight))
@@ -119,16 +149,19 @@ while run:
 
     # handle keys pressed by player (left arrow, right arrow, space)
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and player.x > player.vel:
+    if keys[pygame.K_LEFT] and player.x > player.vel and not player.killed:
         player.x -= player.vel
-    elif keys[pygame.K_RIGHT] and player.x < screenWidth - player.width - player.vel:
+    elif keys[pygame.K_RIGHT] and player.x < screenWidth - player.width - player.vel and not player.killed:
         player.x += player.vel
-    if keys[pygame.K_SPACE] and canShoot == 0:
+    if keys[pygame.K_SPACE] and canShoot == 0 and not player.killed:
         shoot.play()
         if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
             projectiles.append(Projectile(round(player.x + player.width // 2),
                                           round(player.y + player.height // 2), 4, (255, 128, 0)))
         canShoot += 1
+
+    if keys[pygame.K_h]:
+        player.hit()
 
     redraw_game_window()
 
