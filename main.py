@@ -21,7 +21,7 @@ class Player(object):
 class Enemy(object):
     alien = pygame.image.load('img/alien.png')
 
-    def __init__(self, x, y, width, height, start, end):
+    def __init__(self, x, y, width, height, start, end, status):
         self.x = x
         self.y = y
         self.width = width
@@ -29,7 +29,8 @@ class Enemy(object):
         self.start = start
         self.end = end
         self.path = [self.start, self.end]  # where our enemy starts and finishes his path.
-        self.vel = 5
+        self.vel = 3
+        self.status = True  # death or alive
 
     def draw(self, win):
         self.move()
@@ -70,24 +71,37 @@ def draw_block_of_enemies():
     y = 20
     for j in range(len(enemy)):
         for i in range(len(enemy[j])):
-            enemy[j][i] = Enemy(x, y, 60, 60, i*60, screenWidth - 60*(10-i))
+            enemy[j][i] = Enemy(x, y, 60, 60, i*60, screenWidth - 60*(10-i), True)
             x += 60
         x = 20
         y += 40
-        i = 1;
+        i = 1
 
     return enemy
+
+# for every foe check collision with projectiles on screen
+def check_collison(foe):
+    for projectile in projectiles:
+        if  foe.x <= projectile.x <= foe.x + 60 and foe.status is True:
+            if foe.y <= projectile.y <= foe.y + 40:
+                projectiles.pop(projectiles.index(projectile))
+                return False
+    return True
 
 # in every frame display all objects on their current positions
 def redraw_game_window():
     win.blit(bg, (0, 0))
     player.draw(win)
-    for i in range(len(enemy)):
-        for j in range(len(enemy[i])):
-            enemy[i][j].draw(win)
 
     for bullet in projectiles:
         bullet.draw(win)
+
+    for i in range(len(enemy)):
+        for j in range(len(enemy[i])):
+            if check_collison(enemy[i][j]) is True and enemy[i][j].status is True:
+                enemy[i][j].draw(win)
+            else:
+                enemy[i][j].status = False
 
     pygame.display.update()
 
