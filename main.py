@@ -125,24 +125,9 @@ def redraw_game_window():
     pygame.display.update()
 
 
-<<<<<<< HEAD
-def menu():
-    intro = True
-    while intro:
-        for event in pygame.event.get():
-            pygame.quit()
-            quit()
 
-
-#  gameDisplay.fill((255, 255, 255))
-
-
-screenWidth = 800
-screenHeight = 480
-=======
 screenWidth = 1280
 screenHeight = 800
->>>>>>> 244097c826a6626bb45f5b83f6470d646fc92f1f
 win = pygame.display.set_mode((screenWidth, screenHeight))
 pygame.display.set_caption("Space Invaders")
 clock = pygame.time.Clock()
@@ -185,12 +170,8 @@ while run:
         player.x -= player.vel
     elif keys[pygame.K_RIGHT] and player.x < screenWidth - player.width - player.vel and not player.killed:
         player.x += player.vel
-<<<<<<< HEAD
     if keys[pygame.K_SPACE] and canShoot == 0 and not player.killed:
         shoot.play()
-=======
-    if keys[pygame.K_SPACE] and canShoot == 0:
->>>>>>> 244097c826a6626bb45f5b83f6470d646fc92f1f
         if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
             projectiles.append(Projectile(round(player.x + player.width // 2),
                                           round(player.y + player.height // 2), 4, (255, 128, 0)))
