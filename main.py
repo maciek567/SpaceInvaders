@@ -1,5 +1,4 @@
 import pygame
-
 pygame.init()
 
 
@@ -98,6 +97,7 @@ def draw_block_of_enemies():
 
     return enemy
 
+
 # for every foe check collision with projectiles on screen
 def check_collison(foe):
     for projectile in projectiles:
@@ -106,6 +106,7 @@ def check_collison(foe):
                 projectiles.pop(projectiles.index(projectile))
                 return False
     return True
+
 
 # in every frame display all objects on their current positions
 def redraw_game_window():
@@ -125,6 +126,128 @@ def redraw_game_window():
     pygame.display.update()
 
 
+def button(message, x, y, w, h, color, mouse_hover, action=None):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+
+    font = pygame.font.SysFont("comicsansms", 40)
+    text = font.render(message, 1, color)
+
+    if x+w > mouse[0] > x and y+h > mouse[1] > y:
+        pygame.draw.rect(win, mouse_hover, (x, y, text.get_width(), h))
+        if click[0] == 1 and action is not None:
+            action()
+    win.blit(text, (x, y))
+
+
+def quit_game():
+    pygame.quit()
+
+
+def menu():
+    intro = True
+    pygame.mixer.music.stop()
+    win.blit(bg, (0, 0))
+    while intro:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+        win.blit(bg, (0, 0))
+        font1 = pygame.font.SysFont('comicsans', 100)
+        title = font1.render("Space Invaders", 1, WHITE)
+        win.blit(title, ((screenWidth - title.get_width()) / 2, screenHeight / 5))
+
+        button_width = 200
+        button_height = 50
+        button("Play", (screenWidth - button_width) / 2, screenHeight * 2/5, button_width, button_height, WHITE, GRAY, main_loop)
+        button("Options", (screenWidth - button_width) / 2, screenHeight * 2.5/5, button_width, button_height, WHITE, GRAY)
+        button("High scores", (screenWidth - button_width) / 2, screenHeight * 3 / 5, button_width, button_height, WHITE, GRAY)
+        button("Quit", (screenWidth - button_width) / 2, screenHeight * 3.5/5, button_width, button_height,  WHITE, GRAY, quit_game)
+
+        pygame.display.update()
+
+
+def game_over():
+    game_over_text = True
+    pygame.mixer.music.stop()
+
+    font1 = pygame.font.SysFont('comicsans', 200)
+    title = font1.render("Game over!", 1, RED)
+    win.blit(title, ((screenWidth - title.get_width()) / 2, screenHeight / 3))
+
+    font2 = pygame.font.SysFont('comicsans', 80)
+    description = font2.render("Press space to continue", 1, GREEN)
+    win.blit(description, ((screenWidth - description.get_width()) / 2, screenHeight / 2))
+
+    pygame.display.update()
+    while game_over_text:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE]:
+            game_over_text = False
+            menu()
+
+
+def main_loop():
+    run = True
+    # Ship can shoot only if this variable is equal to 0. After every successful shoot this variable is incremented,
+    # and if reaches 10, then is reduced again to 0. This feature prevent from shooting all projectiles at once
+    # which can cause undesirable blurred trail on screen
+    canShoot = 0
+    pygame.mixer.music.rewind()
+    pygame.mixer.music.play()
+    while run:
+        clock.tick(30)  # fps
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+        if canShoot > 0:
+            canShoot += 1
+        if canShoot >= 10:
+            canShoot = 0
+
+        # display projectiles until they reach top border of screen
+        # if projectile reaches top border of screen remove it from array so that ship could shoot next ones
+        for projectile in projectiles:
+            if 0 < projectile.y > 0:
+                projectile.y -= projectile.vel
+            else:
+                projectiles.pop(projectiles.index(projectile))
+
+        # handle keys pressed by player (left arrow, right arrow, space)
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and player.x > player.vel and not player.killed:
+            player.x -= player.vel
+        elif keys[pygame.K_RIGHT] and player.x < screenWidth - player.width - player.vel and not player.killed:
+            player.x += player.vel
+        if keys[pygame.K_SPACE] and canShoot == 0 and not player.killed:
+            shoot.play()
+            if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
+                projectiles.append(Projectile(round(player.x + player.width // 2),
+                                              round(player.y + player.height // 2), 4, (255, 128, 0)))
+            canShoot += 1
+        if keys[pygame.K_h]:
+            player.hit()
+        if keys[pygame.K_o]:
+            run = False
+            game_over()
+        if keys[pygame.K_ESCAPE]:
+            run = False
+            menu()
+
+        redraw_game_window()
+
+
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (169, 169, 169)
+GREEN = (0, 255, 0)
+RED = (200, 0, 0)
 
 screenWidth = 1280
 screenHeight = 800
@@ -134,7 +257,6 @@ clock = pygame.time.Clock()
 
 bg = pygame.image.load('img/sky.jpg')
 music = pygame.mixer.music.load('sounds/music1.wav')
-pygame.mixer.music.play(-1)
 shoot = pygame.mixer.Sound('sounds/shoot.wav')
 invaderKilled = pygame.mixer.Sound('sounds/invaderKilled.wav')
 explosion = pygame.mixer.Sound('sounds/explosion.wav')
@@ -144,49 +266,9 @@ enemy = [[None]*10, [None]*10, [None]*10]
 enemy = draw_block_of_enemies()
 projectiles = []
 
-# Ship can shoot only if this variable is equal to 0. After every successful shoot this variable is incremented,
-# and if reaches 10, then is reduced again to 0. This feature prevent from shooting all projectiles at once
-# which can cause undesirable blurred trail on screen
-canShoot = 0
 
-run = True
-while run:
-    clock.tick(30)  # fps
+menu()
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
 
-    if canShoot > 0:
-        canShoot += 1
-    if canShoot >= 10:
-        canShoot = 0
-
-    # display projectiles until they reach top border of screen
-    # if projectile reaches top border of screen remove it from array so that ship could shoot next ones
-    for projectile in projectiles:
-        if 0 < projectile.y > 0:
-            projectile.y -= projectile.vel
-        else:
-            projectiles.pop(projectiles.index(projectile))
-
-    # handle keys pressed by player (left arrow, right arrow, space)
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and player.x > player.vel and not player.killed:
-        player.x -= player.vel
-    elif keys[pygame.K_RIGHT] and player.x < screenWidth - player.width - player.vel and not player.killed:
-        player.x += player.vel
-    if keys[pygame.K_SPACE] and canShoot == 0 and not player.killed:
-        shoot.play()
-        if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
-            projectiles.append(Projectile(round(player.x + player.width // 2),
-                                          round(player.y + player.height // 2), 4, (255, 128, 0)))
-        canShoot += 1
-
-    if keys[pygame.K_h]:
-        player.hit()
-
-    redraw_game_window()
-
-#End of game!
+# End of game!
 pygame.quit()
