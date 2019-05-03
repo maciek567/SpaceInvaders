@@ -36,6 +36,13 @@ class Player(object):
         self.killed = True
         self.timeToRecover = 60
 
+    def is_player_hit(self, enemy_projectiles):
+        for enemy_projectile in enemy_projectiles:
+            if self.x <= enemy_projectile.x <= self.x + 60 and self.killed is False:
+                if self.y <= enemy_projectile.y <= self.y + 60:
+                    enemy_projectiles.pop(enemy_projectiles.index(enemy_projectile))
+                    self.hit()
+
 
 class Enemy(object):
     alien = pygame.image.load('img/alien.png')
@@ -70,7 +77,15 @@ class Enemy(object):
                 self.y += 40
                 self.vel = self.vel * -1
 
-    # when hit : invaderKilled.play()
+    # for every foe check collision with projectiles on screen
+    def check_collison(foe, projectiles):
+        for projectile in projectiles:
+            if foe.x <= projectile.x <= foe.x + 60 and foe.status is True:
+                if foe.y <= projectile.y <= foe.y + 40:
+                    invaderKilled.play()
+                    projectiles.pop(projectiles.index(projectile))
+                    return False
+        return True
 
 
 class Projectile(object):
@@ -85,7 +100,7 @@ class Projectile(object):
         pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
 
 
-def draw_block_of_enemies():
+def draw_block_of_enemies(enemy):
     x = 20
     y = 60
     for j in range(len(enemy)):
@@ -95,30 +110,11 @@ def draw_block_of_enemies():
         x = 20
         y += 40
         i = 1
-
     return enemy
 
 
-# for every foe check collision with projectiles on screen
-def check_collison(foe):
-    for projectile in projectiles:
-        if  foe.x <= projectile.x <= foe.x + 60 and foe.status is True:
-            if foe.y <= projectile.y <= foe.y + 40:
-                projectiles.pop(projectiles.index(projectile))
-                return False
-    return True
-
-
-def is_player_hit():
-    for enemy_projectile in enemy_projectiles:
-        if player.x <= enemy_projectile.x <= player.x + 60 and player.killed is False:
-            if player.y <= enemy_projectile.y <= player.y + 60:
-                enemy_projectiles.pop(enemy_projectiles.index(enemy_projectile))
-                player.hit()
-
-
 # in every frame display all objects on their current positions
-def redraw_game_window():
+def redraw_game_window(player, enemy, projectiles, enemy_projectiles):
     win.blit(bg, (0, 0))
     player.draw(win)
 
@@ -127,11 +123,11 @@ def redraw_game_window():
 
     for enemy_bullet in enemy_projectiles:
         enemy_bullet.draw(win)
-        is_player_hit()
+        player.is_player_hit(enemy_projectiles)
 
     for i in range(len(enemy)):
         for j in range(len(enemy[i])):
-            if check_collison(enemy[i][j]) is True and enemy[i][j].status is True:
+            if Enemy.check_collison(enemy[i][j], projectiles) is True and enemy[i][j].status is True:
                 enemy[i][j].draw(win)
             else:
                 enemy[i][j].status = False
@@ -210,13 +206,20 @@ def game_over():
 
 
 def main_loop():
-    run = True
+
     # Ship can shoot only if this variable is equal to 0. After every successful shoot this variable is incremented,
     # and if reaches 10, then is reduced again to 0. This feature prevent from shooting all projectiles at once
     # which can cause undesirable blurred trail on screen
-    canShoot = 0
+    can_shoot = 0
+    player = Player(20, screenHeight - 80, 60, 60)
+    enemy = [[None] * 10, [None] * 10, [None] * 10]
+    enemy = draw_block_of_enemies(enemy)
+    projectiles = []
+    enemy_projectiles = []
     pygame.mixer.music.rewind()
     pygame.mixer.music.play()
+
+    run = True
     while run:
         enemy_shot = random.randint(1, 50)
         enemy_x = random.randint(1, 9)
@@ -227,10 +230,10 @@ def main_loop():
             if event.type == pygame.QUIT:
                 run = False
 
-        if canShoot > 0:
-            canShoot += 1
-        if canShoot >= 15:
-            canShoot = 0
+        if can_shoot > 0:
+            can_shoot += 1
+        if can_shoot >= 15:
+            can_shoot = 0
 
         # display projectiles until they reach top border of screen
         # if projectile reaches top border of screen remove it from array so that ship could shoot next ones
@@ -257,13 +260,13 @@ def main_loop():
             player.x -= player.vel
         elif keys[pygame.K_RIGHT] and player.x < screenWidth - player.width - player.vel and not player.killed:
             player.x += player.vel
-        if keys[pygame.K_SPACE] and canShoot == 0 and not player.killed:
+        if keys[pygame.K_SPACE] and can_shoot == 0 and not player.killed:
             shoot.play()
             if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
                 projectiles.append(Projectile(round(player.x + player.width // 2),
                                               round(player.y + player.height // 2), 4, (255, 128, 0)))
 
-            canShoot += 1
+            can_shoot += 1
         if keys[pygame.K_o]:
             run = False
             game_over()
@@ -271,7 +274,7 @@ def main_loop():
             run = False
             menu()
 
-        redraw_game_window()
+        redraw_game_window(player, enemy, projectiles, enemy_projectiles)
 
 
 WHITE = (255, 255, 255)
@@ -292,13 +295,9 @@ shoot = pygame.mixer.Sound('sounds/shoot.wav')
 invaderKilled = pygame.mixer.Sound('sounds/invaderKilled.wav')
 explosion = pygame.mixer.Sound('sounds/explosion.wav')
 
-player = Player(20, screenHeight - 80, 60, 60)
-enemy = [[None]*10, [None]*10, [None]*10]
-enemy = draw_block_of_enemies()
-projectiles = []
-enemy_projectiles = []
 
 menu()
+
 
 # End of game!
 pygame.quit()
