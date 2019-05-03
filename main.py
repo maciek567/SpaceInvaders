@@ -28,7 +28,6 @@ class Player(object):
             self.timeToRecover -= 1
             if self.timeToRecover == 0:
                 self.killed = False
-                #self.x = 20
 
     def hit(self):
         explosion.play()
@@ -155,7 +154,6 @@ def button(message, x, y, w, h, color, mouse_hover, action=None):
 
 def quit_game():
     pygame.quit()
-    return False
 
 
 def menu():
@@ -195,6 +193,7 @@ def game_over():
     win.blit(description, ((screenWidth - description.get_width()) / 2, screenHeight / 2))
 
     pygame.display.update()
+
     while game_over_text:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -211,6 +210,7 @@ def main_loop():
     # and if reaches 10, then is reduced again to 0. This feature prevent from shooting all projectiles at once
     # which can cause undesirable blurred trail on screen
     can_shoot = 0
+    frequency_of_alien_shooting = 50
     player = Player(20, screenHeight - 80, 60, 60)
     enemy = [[None] * 10, [None] * 10, [None] * 10]
     enemy = draw_block_of_enemies(enemy)
@@ -221,9 +221,9 @@ def main_loop():
 
     run = True
     while run:
-        enemy_shot = random.randint(1, 50)
-        enemy_x = random.randint(1, 9)
-        enemy_y = random.randint(1, 2)
+        enemy_shot = random.randint(1, frequency_of_alien_shooting)
+        enemy_x = random.randint(0, 9)
+        enemy_y = random.randint(0, 2)
         clock.tick(30)  # fps
 
         for event in pygame.event.get():
@@ -232,7 +232,7 @@ def main_loop():
 
         if can_shoot > 0:
             can_shoot += 1
-        if can_shoot >= 15:
+        if can_shoot >= 20:
             can_shoot = 0
 
         # display projectiles until they reach top border of screen
@@ -249,10 +249,11 @@ def main_loop():
             else:
                 enemy_projectiles.pop(enemy_projectiles.index(enemy_projectile))
 
-        if enemy_shot == 10 and enemy[enemy_y][enemy_x].status == True:
+        if enemy_shot == 2 and enemy[enemy_y][enemy_x].status is True:
             enemy_projectiles.append(Projectile(round(enemy[enemy_y][enemy_x].x + enemy[enemy_y][enemy_x].width // 2),
                                                 round(enemy[enemy_y][enemy_x].y + enemy[enemy_y][enemy_x].height // 2), 4, GREEN))
-
+        elif enemy[enemy_y][enemy_x].status is False and frequency_of_alien_shooting > 10:
+            frequency_of_alien_shooting -= 1
 
         # handle keys pressed by player (left arrow, right arrow, space)
         keys = pygame.key.get_pressed()
@@ -267,9 +268,6 @@ def main_loop():
                                               round(player.y + player.height // 2), 4, (255, 128, 0)))
 
             can_shoot += 1
-        if keys[pygame.K_o]:
-            run = False
-            game_over()
         if keys[pygame.K_ESCAPE]:
             run = False
             menu()
