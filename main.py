@@ -1,4 +1,5 @@
 import pygame
+import random
 pygame.init()
 
 
@@ -27,7 +28,7 @@ class Player(object):
             self.timeToRecover -= 1
             if self.timeToRecover == 0:
                 self.killed = False
-                self.x = 20
+                #self.x = 20
 
     def hit(self):
         explosion.play()
@@ -47,7 +48,7 @@ class Enemy(object):
         self.start = start
         self.end = end
         self.path = [self.start, self.end]  # where our enemy starts and finishes his path.
-        self.vel = 3
+        self.vel = 2
         self.status = True  # death or alive
 
     def draw(self, win):
@@ -86,7 +87,7 @@ class Projectile(object):
 
 def draw_block_of_enemies():
     x = 20
-    y = 20
+    y = 60
     for j in range(len(enemy)):
         for i in range(len(enemy[j])):
             enemy[j][i] = Enemy(x, y, 60, 60, i*60, screenWidth - 60*(10-i), True)
@@ -108,6 +109,14 @@ def check_collison(foe):
     return True
 
 
+def is_player_hit():
+    for enemy_projectile in enemy_projectiles:
+        if player.x <= enemy_projectile.x <= player.x + 60 and player.killed is False:
+            if player.y <= enemy_projectile.y <= player.y + 60:
+                enemy_projectiles.pop(enemy_projectiles.index(enemy_projectile))
+                player.hit()
+
+
 # in every frame display all objects on their current positions
 def redraw_game_window():
     win.blit(bg, (0, 0))
@@ -116,12 +125,19 @@ def redraw_game_window():
     for bullet in projectiles:
         bullet.draw(win)
 
+    for enemy_bullet in enemy_projectiles:
+        enemy_bullet.draw(win)
+        is_player_hit()
+
     for i in range(len(enemy)):
         for j in range(len(enemy[i])):
             if check_collison(enemy[i][j]) is True and enemy[i][j].status is True:
                 enemy[i][j].draw(win)
             else:
                 enemy[i][j].status = False
+
+    if player.health < 1:
+        game_over()
 
     pygame.display.update()
 
@@ -137,11 +153,13 @@ def button(message, x, y, w, h, color, mouse_hover, action=None):
         pygame.draw.rect(win, mouse_hover, (x, y, text.get_width(), h))
         if click[0] == 1 and action is not None:
             action()
+
     win.blit(text, (x, y))
 
 
 def quit_game():
     pygame.quit()
+    return False
 
 
 def menu():
@@ -200,6 +218,9 @@ def main_loop():
     pygame.mixer.music.rewind()
     pygame.mixer.music.play()
     while run:
+        enemy_shot = random.randint(1, 50)
+        enemy_x = random.randint(1, 9)
+        enemy_y = random.randint(1, 2)
         clock.tick(30)  # fps
 
         for event in pygame.event.get():
@@ -208,7 +229,7 @@ def main_loop():
 
         if canShoot > 0:
             canShoot += 1
-        if canShoot >= 10:
+        if canShoot >= 15:
             canShoot = 0
 
         # display projectiles until they reach top border of screen
@@ -218,6 +239,17 @@ def main_loop():
                 projectile.y -= projectile.vel
             else:
                 projectiles.pop(projectiles.index(projectile))
+
+        for enemy_projectile in enemy_projectiles:
+            if 0 < enemy_projectile.y > 0:
+                enemy_projectile.y += enemy_projectile.vel
+            else:
+                enemy_projectiles.pop(enemy_projectiles.index(enemy_projectile))
+
+        if enemy_shot == 10 and enemy[enemy_y][enemy_x].status == True:
+            enemy_projectiles.append(Projectile(round(enemy[enemy_y][enemy_x].x + enemy[enemy_y][enemy_x].width // 2),
+                                                round(enemy[enemy_y][enemy_x].y + enemy[enemy_y][enemy_x].height // 2), 4, GREEN))
+
 
         # handle keys pressed by player (left arrow, right arrow, space)
         keys = pygame.key.get_pressed()
@@ -230,9 +262,8 @@ def main_loop():
             if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
                 projectiles.append(Projectile(round(player.x + player.width // 2),
                                               round(player.y + player.height // 2), 4, (255, 128, 0)))
+
             canShoot += 1
-        if keys[pygame.K_h]:
-            player.hit()
         if keys[pygame.K_o]:
             run = False
             game_over()
@@ -265,10 +296,9 @@ player = Player(20, screenHeight - 80, 60, 60)
 enemy = [[None]*10, [None]*10, [None]*10]
 enemy = draw_block_of_enemies()
 projectiles = []
-
+enemy_projectiles = []
 
 menu()
-
 
 # End of game!
 pygame.quit()
