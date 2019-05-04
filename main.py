@@ -30,10 +30,11 @@ class Player(object):
                 self.killed = False
 
     def hit(self):
-        explosion.play()
-        self.health -= 1
-        self.killed = True
-        self.timeToRecover = 60
+        if not self.killed:
+            explosion.play()
+            self.health -= 1
+            self.killed = True
+            self.timeToRecover = 60
 
     def is_player_hit(self, enemy_projectiles):
         for enemy_projectile in enemy_projectiles:
@@ -78,10 +79,12 @@ class Enemy(object):
 
     # for every foe check collision with projectiles on screen
     def check_collison(foe, projectiles):
+        global score
         for projectile in projectiles:
             if foe.x <= projectile.x <= foe.x + 60 and foe.status is True:
                 if foe.y <= projectile.y <= foe.y + 40:
                     invaderKilled.play()
+                    score += 10
                     projectiles.pop(projectiles.index(projectile))
                     return False
         return True
@@ -114,6 +117,7 @@ def draw_block_of_enemies(enemy):
 
 # in every frame display all objects on their current positions
 def redraw_game_window(player, enemy, projectiles, enemy_projectiles):
+    global score
     win.blit(bg, (0, 0))
     player.draw(win)
 
@@ -130,6 +134,11 @@ def redraw_game_window(player, enemy, projectiles, enemy_projectiles):
                 enemy[i][j].draw(win)
             else:
                 enemy[i][j].status = False
+
+    # display score
+    font = pygame.font.SysFont('comicsans', 50)
+    description = font.render("Score: " + str(score), 1, WHITE)
+    win.blit(description, (screenWidth - description.get_width() - 20, 20))
 
     if player.health < 1:
         game_over()
@@ -163,34 +172,41 @@ def menu():
     while intro:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                intro = False
                 pygame.quit()
 
-        win.blit(bg, (0, 0))
-        font1 = pygame.font.SysFont('comicsans', 100)
-        title = font1.render("Space Invaders", 1, WHITE)
-        win.blit(title, ((screenWidth - title.get_width()) / 2, screenHeight / 5))
+        if intro:
+            win.blit(bg, (0, 0))
+            font1 = pygame.font.SysFont('comicsans', 100)
+            title = font1.render("Space Invaders", 1, WHITE)
+            win.blit(title, ((screenWidth - title.get_width()) / 2, screenHeight / 5))
 
-        button_width = 200
-        button_height = 50
-        button("Play", (screenWidth - button_width) / 2, screenHeight * 2/5, button_width, button_height, WHITE, GRAY, main_loop)
-        button("Options", (screenWidth - button_width) / 2, screenHeight * 2.5/5, button_width, button_height, WHITE, GRAY)
-        button("High scores", (screenWidth - button_width) / 2, screenHeight * 3 / 5, button_width, button_height, WHITE, GRAY)
-        button("Quit", (screenWidth - button_width) / 2, screenHeight * 3.5/5, button_width, button_height,  WHITE, GRAY, quit_game)
+            button_width = 200
+            button_height = 50
+            button("Play", (screenWidth - button_width) / 2, screenHeight * 2/5, button_width, button_height, WHITE, GRAY, main_loop)
+            button("Options", (screenWidth - button_width) / 2, screenHeight * 2.5/5, button_width, button_height, WHITE, GRAY)
+            button("High scores", (screenWidth - button_width) / 2, screenHeight * 3 / 5, button_width, button_height, WHITE, GRAY)
+            button("Quit", (screenWidth - button_width) / 2, screenHeight * 3.5/5, button_width, button_height,  WHITE, GRAY, quit_game)
 
-        pygame.display.update()
+            pygame.display.update()
 
 
 def game_over():
+    global score
     game_over_text = True
     pygame.mixer.music.stop()
 
     font1 = pygame.font.SysFont('comicsans', 200)
     title = font1.render("Game over!", 1, RED)
-    win.blit(title, ((screenWidth - title.get_width()) / 2, screenHeight / 3))
+    win.blit(title, ((screenWidth - title.get_width()) / 2, screenHeight / 3.5))
 
-    font2 = pygame.font.SysFont('comicsans', 80)
-    description = font2.render("Press space to continue", 1, GREEN)
+    font2 = pygame.font.SysFont('comicsans', 100)
+    description = font2.render("Your score: " + str(score), 1, WHITE)
     win.blit(description, ((screenWidth - description.get_width()) / 2, screenHeight / 2))
+
+    font3 = pygame.font.SysFont('comicsans', 80)
+    description = font3.render("Press space to continue", 1, GREEN)
+    win.blit(description, ((screenWidth - description.get_width()) / 2, screenHeight / 1.5))
 
     pygame.display.update()
 
@@ -216,6 +232,8 @@ def main_loop():
     enemy = draw_block_of_enemies(enemy)
     projectiles = []
     enemy_projectiles = []
+    global score
+    score = 0
     pygame.mixer.music.rewind()
     pygame.mixer.music.play()
 
@@ -229,6 +247,7 @@ def main_loop():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+                pygame.mixer.music.stop()
 
         if can_shoot > 0:
             can_shoot += 1
@@ -282,7 +301,7 @@ GREEN = (0, 255, 0)
 RED = (200, 0, 0)
 
 screenWidth = 1280
-screenHeight = 800
+screenHeight = 720
 win = pygame.display.set_mode((screenWidth, screenHeight))
 pygame.display.set_caption("Space Invaders")
 clock = pygame.time.Clock()
@@ -292,7 +311,7 @@ music = pygame.mixer.music.load('sounds/music1.wav')
 shoot = pygame.mixer.Sound('sounds/shoot.wav')
 invaderKilled = pygame.mixer.Sound('sounds/invaderKilled.wav')
 explosion = pygame.mixer.Sound('sounds/explosion.wav')
-
+score = 0
 
 menu()
 
