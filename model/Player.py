@@ -2,8 +2,8 @@ import pygame
 
 
 class Player(object):
-    ship = pygame.image.load('model/img/ship.png')
-    ship_trans = pygame.image.load('model/img/ship_trans.png')
+    ship = pygame.image.load('../model/img/ship.png')
+    ship_trans = pygame.image.load('../model/img/ship_trans.png')
 
     def __init__(self, x, y, width, height):
         self.x = x  # coordinates of ship at the beginning
@@ -28,8 +28,9 @@ class Player(object):
                 self.killed = False
 
     def hit(self):
+        explosion = pygame.mixer.Sound('sounds/explosion.wav')
         if not self.killed:
-            # explosion.play()
+            explosion.play()
             self.health -= 1
             self.killed = True
             self.timeToRecover = 60

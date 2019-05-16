@@ -7,7 +7,7 @@ class Projectile(object):
         self.y = y
         self.radius = radius
         self.color = color
-        self.vel = 8  # velocity of bullet
+        self.vel = 10  # velocity of bullet
 
     def draw(self, win):
         pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
