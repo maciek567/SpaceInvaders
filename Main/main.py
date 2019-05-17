@@ -1,3 +1,4 @@
+import sys
 import pygame
 import random
 import Main
@@ -9,6 +10,7 @@ from view.object_draw import draw_block_of_enemies
 from view.life_draw import life_draw
 from view.next_level import you_win
 from view.description import description_of_game
+from view.scores import Scores
 pygame.init()
 
 
@@ -25,13 +27,14 @@ def button(message, x, y, w, h, color, mouse_hover, action=None):
         if click[0] == 1 and action is not None:
             if action == "main_loop":
                 main_loop()
-                flag = False
-            if action == "quit_game":
-                flag = False
+            elif action == "quit_game":
                 pygame.quit()
-            if action == "description":
-                flag = False
+                sys.exit()
+            elif action == "description":
                 description_of_game()
+            elif action == "high_scores":
+                scores = Scores()
+                scores.show_high_scores()
 
     if flag is True:
         Main.win.blit(text, (x, y))
@@ -97,24 +100,22 @@ def menu():
     while intro:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                intro = False
                 pygame.quit()
+                sys.exit()
 
-        if intro:
-            Main.win.blit(Main.bg, (0, 0))
-            font1 = pygame.font.SysFont('comicsans', 100)
-            title = font1.render("Space Invaders", 1, Main.WHITE)
-            Main.win.blit(title, ((Main.screenWidth - title.get_width()) / 2, Main.screenHeight / 5))
+        Main.win.blit(Main.bg, (0, 0))
+        font1 = pygame.font.SysFont('comicsans', 100)
+        title = font1.render("Space Invaders", 1, Main.YELLOW)
+        Main.win.blit(title, ((Main.screenWidth - title.get_width()) / 2, Main.screenHeight / 5))
 
-            button_width = 200
-            button_height = 50
-            button("Play", (Main.screenWidth - button_width) / 2, Main.screenHeight * 2/5, button_width, button_height, Main.WHITE, Main.GRAY, "main_loop")
-            button("Description", (Main.screenWidth - button_width) / 2, Main.screenHeight * 2.5/5, button_width, button_height, Main.WHITE, Main.GRAY, "description")
-            button("High scores", (Main.screenWidth - button_width) / 2, Main.screenHeight * 3 / 5, button_width, button_height, Main.WHITE, Main.GRAY)
-            intro = button("Quit", (Main.screenWidth - button_width) / 2, Main.screenHeight * 3.5/5, button_width, button_height,  Main.WHITE, Main.GRAY, "quit_game")
+        button_width = 200
+        button_height = 50
+        button("Play", (Main.screenWidth - button_width) / 2, Main.screenHeight * 2/5, button_width, button_height, Main.WHITE, Main.GRAY, "main_loop")
+        button("Description", (Main.screenWidth - button_width) / 2, Main.screenHeight * 2.5/5, button_width, button_height, Main.WHITE, Main.GRAY, "description")
+        button("High scores", (Main.screenWidth - button_width) / 2, Main.screenHeight * 3 / 5, button_width, button_height, Main.WHITE, Main.GRAY, "high_scores")
+        intro = button("Quit", (Main.screenWidth - button_width) / 2, Main.screenHeight * 3.5/5, button_width, button_height,  Main.WHITE, Main.GRAY, "quit_game")
 
-            if intro is True:
-                pygame.display.update()
+        pygame.display.update()
 
 
 def main_loop():
@@ -162,6 +163,7 @@ def main_loop():
                 run = False
                 pygame.quit()
                 pygame.mixer.music.stop()
+                sys.exit()
 
         if can_shoot > 0:
             can_shoot += 1
@@ -195,7 +197,7 @@ def main_loop():
             player.x -= player.vel
         elif keys[pygame.K_RIGHT] and player.x < Main.screenWidth - player.width - player.vel and not player.killed:
             player.x += player.vel
-        if keys[pygame.K_SPACE] and can_shoot == 0 and not player.killed:
+        if keys[pygame.K_SPACE] and can_shoot == 0 and not player.protection:
             Main.shoot.play()
             if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
                 projectiles.append(Projectile(round(player.x + player.width // 2),

@@ -10,9 +10,10 @@ BLACK = (0, 0, 0)
 GRAY = (169, 169, 169)
 GREEN = (0, 255, 0)
 RED = (200, 0, 0)
+YELLOW = (255, 255, 0)
 
-screenWidth = 1920
-screenHeight = 1060
+screenWidth = 1280
+screenHeight = 720
 
 win = pygame.display.set_mode((screenWidth, screenHeight))
 pygame.display.set_caption("Space Invaders")

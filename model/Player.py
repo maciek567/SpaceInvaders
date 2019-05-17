@@ -13,31 +13,40 @@ class Player(object):
         self.vel = 5  # velocity of ship
         self.health = 3
         self.killed = False
-        self.timeToRecover = 0  # number of fps after ship being killed by alien when ship blink
+        self.protection = False
+        self.timeToRecover = 0  # number of fps after death when player cannot move
+        self.protectionTime = 0  # number of fps after death when player cannot loose life
 
     def draw(self, win):
-        if not self.killed:
+        if not self.protection:
             win.blit(self.ship, (self.x, self.y))
         else:
-            if (self.timeToRecover // 5) % 2 == 0:
+            if (self.protectionTime // 5) % 2 == 0:
                 win.blit(self.ship_trans, (self.x, self.y))
             else:
                 win.blit(self.ship, (self.x, self.y))
+
+            self.protectionTime -= 1
+            if self.protectionTime == 0:
+                self.protection = False
+        if self.killed:
             self.timeToRecover -= 1
             if self.timeToRecover == 0:
                 self.killed = False
 
     def hit(self):
         explosion = pygame.mixer.Sound('sounds/explosion.wav')
-        if not self.killed:
+        if not self.protection:
             explosion.play()
             self.health -= 1
             self.killed = True
-            self.timeToRecover = 60
+            self.protection = True
+            self.timeToRecover = 50
+            self.protectionTime = 100
 
     def is_player_hit(self, enemy_projectiles):
         for enemy_projectile in enemy_projectiles:
-            if self.x < enemy_projectile.x < self.x + 60 and self.killed is False:
+            if self.x < enemy_projectile.x < self.x + 60:
                 if self.y <= enemy_projectile.y <= self.y + 60:
                     enemy_projectiles.pop(enemy_projectiles.index(enemy_projectile))
                     self.hit()

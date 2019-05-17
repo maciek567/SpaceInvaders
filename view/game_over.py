@@ -1,12 +1,14 @@
+import sys
 import pygame
 import Main
+from view.scores import Scores
 
 
 def game_over():
 
     game_over_text = True
     Main.LEVEL = 1
-    # pygame.mixer.music.stop()
+    pygame.mixer.music.stop()
 
     font1 = pygame.font.SysFont('comicsans', 200)
     title = font1.render("Game over!", 1, Main.RED)
@@ -20,6 +22,9 @@ def game_over():
     description = font3.render("Press space to continue", 1, Main.GREEN)
     Main.win.blit(description, ((Main.screenWidth - description.get_width()) / 2, Main.screenHeight / 1.5))
 
+    scores = Scores()
+    scores.save_score(['Player', str(Main.SCORE)])
+
     Main.SCORE = 0
     pygame.display.update()
 
@@ -27,6 +32,7 @@ def game_over():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                sys.exit()
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
             game_over_text = False

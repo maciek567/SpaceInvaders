@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 import Main
 from model.Player import Player
@@ -51,6 +53,7 @@ def description_of_game():
             if event.type == pygame.QUIT:
                 res = False
                 pygame.quit()
+                sys.exit()
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:
