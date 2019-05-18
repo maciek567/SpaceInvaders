@@ -2,6 +2,7 @@ import sys
 import pygame
 import random
 import Main
+from model.Cover import Cover
 from model.Player import Player
 from model.Projectile import Projectile
 from model.SpecialEnemy import SpecialEnemy
@@ -42,14 +43,13 @@ def button(message, x, y, w, h, color, mouse_hover, action=None):
 
 
 # in every frame display all objects on their current positions
-def redraw_game_window(player, enemy, special_alien, projectiles, enemy_projectiles, lives, alive):
+def redraw_game_window(player, enemy, special_alien, projectiles, enemy_projectiles, lives, alive, covers):
 
     Main.win.blit(Main.bg, (0, 0))
     player.draw(Main.win)
 
     for bullet in projectiles:
         bullet.draw(Main.win)
-
     for enemy_bullet in enemy_projectiles:
         enemy_bullet.draw(Main.win)
         player.is_player_hit(enemy_projectiles)
@@ -61,6 +61,10 @@ def redraw_game_window(player, enemy, special_alien, projectiles, enemy_projecti
             else:
                 enemy[i][j].status = False
                 alive -= 1
+
+    for cover in covers:
+        cover.check_collision(projectiles)
+        cover.check_collision(enemy_projectiles)
 
     if alive < 1:
         you_win()
@@ -86,6 +90,10 @@ def redraw_game_window(player, enemy, special_alien, projectiles, enemy_projecti
         level = pygame.font.SysFont('comicsans', 50)
         lvl_description = level.render("Level: " + str(Main.LEVEL), 1, Main.WHITE)
         Main.win.blit(lvl_description, (20, 20))
+
+        # display covers
+        for cover in covers:
+            cover.draw(Main.win)
 
     if player.health < 1:
         game_over()
@@ -126,19 +134,29 @@ def main_loop():
     pygame.display.update()
 
     number = random.randint(1, 5)
-
     Main.bg = pygame.image.load('../model/img/big_sky' + str(number) + '.jpg')
     can_shoot = 0
     frequency_of_alien_shooting = 111 - Main.LEVEL * 10
+
     player = Player(20, Main.screenHeight - 100, 60, 60)
     enemy = [[None] * 10, [None] * 10, [None] * 10]
     alive = len(enemy) * len(enemy[0])
     enemy = draw_block_of_enemies(enemy)
     special_alien = SpecialEnemy(0, 60, 60, 60, 0, Main.screenWidth, False)
+
     lives = [None, None, None]
     lives = life_draw(lives)
+
     projectiles = []
     enemy_projectiles = []
+
+    covers = []
+    cover_number = 1
+    while cover_number <= 3:
+        cover = Cover(Main.screenWidth * ((2*cover_number-1) / 7), Main.screenHeight * (8 / 10))
+        covers.append(cover)
+        cover_number += 1
+
     pygame.mixer.music.rewind()
     pygame.mixer.music.play()
 
@@ -161,8 +179,8 @@ def main_loop():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-                pygame.quit()
                 pygame.mixer.music.stop()
+                pygame.quit()
                 sys.exit()
 
         if can_shoot > 0:
@@ -218,7 +236,7 @@ def main_loop():
                 paused = False
 
         if paused is False:
-            redraw_game_window(player, enemy, special_alien, projectiles, enemy_projectiles, lives, alive)
+            redraw_game_window(player, enemy, special_alien, projectiles, enemy_projectiles, lives, alive, covers)
 
 
 menu()
