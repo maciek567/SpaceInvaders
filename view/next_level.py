@@ -20,7 +20,7 @@ def you_win():
     Main.win.blit(description, ((Main.screenWidth - description.get_width()) / 2, Main.screenHeight / 2))
 
     font3 = pygame.font.SysFont('comicsans', 80)
-    description = font3.render("Press space to move to level " + str(Main.LEVEL), 1, Main.GREEN)
+    description = font3.render("Press enter to move to level " + str(Main.LEVEL), 1, Main.GREEN)
     Main.win.blit(description, ((Main.screenWidth - description.get_width()) / 2, Main.screenHeight / 1.5))
 
     # Main.SCORE = 0
@@ -32,7 +32,7 @@ def you_win():
                 pygame.quit()
                 sys.exit()
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
+        if keys[pygame.K_RETURN]:
             win = False
             from Main.main import main_loop
             main_loop()
