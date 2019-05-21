@@ -15,7 +15,9 @@ class Boss(object):
         self.start = start
         self.end = end
         self.path = [self.start, self.end]  # where our enemy starts and finishes his path.
-        self.vel = 2
+        self.vel = 7
+        self.time_to_recovery = 0
+        self.protected = False
 
     def draw(self, win):
         self.move()
@@ -43,13 +45,16 @@ class Boss(object):
             if self.health >= 1:
                 if self.x <= projectile.x <= self.x + self.width:
                     if self.y <= projectile.y <= self.y + self.height:
-                        Main.SCORE += 10
                         projectiles.pop(projectiles.index(projectile))
-                        self.health -= 1
+                        if not self.protected:
+                            Main.SCORE += 10
+                            self.health -= 1
+                            self.protected = True
+                            self.time_to_recovery = 60
             if self.health <= 0:
                 self.draw(win)
                 pygame.display.update()
-                Main.SCORE += 150
+                Main.SCORE += 500
                 explosion = pygame.mixer.Sound('../Main/sounds/explosion.wav')
                 explosion.play()
                 next_level.you_win()

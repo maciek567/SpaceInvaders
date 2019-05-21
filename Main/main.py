@@ -70,7 +70,8 @@ def menu():
 
 
 # in every frame display all objects on their current positions
-def redraw_game_window(player, enemy, special_alien, projectiles, enemy_projectiles, lives, alive, covers, boss, boss_projectiles):
+def redraw_game_window(player, enemy, special_alien, projectiles, enemy_projectiles, lives, alive, covers, boss,
+                       boss_projectiles_left, boss_projectiles_right, boss_projectiles_central):
 
     Main.win.blit(Main.bg, (0, 0))
     player.draw(Main.win)
@@ -93,32 +94,40 @@ def redraw_game_window(player, enemy, special_alien, projectiles, enemy_projecti
         for cover in covers:
             cover.check_collision(projectiles)
             cover.check_collision(enemy_projectiles)
+            cover.draw(Main.win)
 
-        if alive < 1:
-            you_win()
+        if special_alien.check_collision(projectiles) is True and special_alien.status is True:
+            special_alien.draw(Main.win)
         else:
-            life_count = player.health
-            for life in lives:
-                life.draw(Main.win)
-                life_count -= 1
-                if life_count < 1:
-                    break
-
-            if special_alien.check_collision(projectiles) is True and special_alien.status is True:
-                special_alien.draw(Main.win)
-            else:
-                special_alien.status = False
-
-            # display covers
-            for cover in covers:
-                cover.draw(Main.win)
+            special_alien.status = False
 
     else:  # boss level
         boss.draw(Main.win)
         boss.check_collision(projectiles, Main.win)
-        for boss_bullet in boss_projectiles:
+        for boss_bullet in boss_projectiles_left:
             boss_bullet.draw(Main.win)
-            player.is_player_hit(boss_projectiles)
+            player.is_player_hit(boss_projectiles_left)
+        for boss_bullet in boss_projectiles_right:
+            boss_bullet.draw(Main.win)
+            player.is_player_hit(boss_projectiles_right)
+        for boss_bullet in boss_projectiles_central:
+            boss_bullet.draw(Main.win)
+            player.is_player_hit(boss_projectiles_central)
+
+        if boss.time_to_recovery > 0:
+            boss.time_to_recovery -= 1
+            if(boss.time_to_recovery == 0):
+                boss.protected = False
+
+    if alive < 1:
+        you_win()
+    else:
+        life_count = player.health
+        for life in lives:
+            life.draw(Main.win)
+            life_count -= 1
+            if life_count < 1:
+                break
 
     # display score
     score = pygame.font.SysFont('comicsans', 50)
@@ -161,7 +170,9 @@ def main_loop():
 
     projectiles = []
     enemy_projectiles = []
-    boss_projectiles = []
+    boss_projectiles_central = []
+    boss_projectiles_left = []
+    boss_projectiles_right = []
 
     covers = []
     cover_number = 1
@@ -173,7 +184,7 @@ def main_loop():
     pygame.mixer.music.rewind()
     pygame.mixer.music.play()
 
-    if Main.LEVEL == 3:
+    if Main.LEVEL == 1:
         Main.BOSS = True
     else:
         Main.BOSS = False
@@ -213,7 +224,7 @@ def main_loop():
                 enemy_projectiles.append(
                     Projectile(round(enemy[enemy_y][enemy_x].x + enemy[enemy_y][enemy_x].width // 2),
                                round(enemy[enemy_y][enemy_x].y + enemy[enemy_y][enemy_x].height // 2),
-                               4, Main.GREEN))
+                               4, Main.GREEN, 10))
             elif enemy[enemy_y][enemy_x].status is False and frequency_of_alien_shooting > 10:
                 frequency_of_alien_shooting -= 1
 
@@ -222,17 +233,35 @@ def main_loop():
             boss_shoot_central = random.randint(1, frequency_of_boss_special_shooting)
             boss_shoot_side = random.randint(1, frequency_of_boss_shooting)
             if boss_shoot_side == 10:
-                boss_projectiles.append(Projectile(round(boss.x + boss.width * (1/4)),
-                                        round(boss.y + boss.height // 2),
-                                        6, Main.GREEN))
-                boss_projectiles.append(Projectile(round(boss.x + boss.width * (3 / 4)),
-                                                   round(boss.y + boss.height // 2),
-                                                   6, Main.GREEN))
+                boss_projectiles_left.append(Projectile(round(boss.x + boss.width * (1/4)),
+                                             round(boss.y + boss.height // 2, 10),
+                                             6, Main.GREEN, 10))
+                boss_projectiles_right.append(Projectile(round(boss.x + boss.width * (3 / 4)),
+                                                         round(boss.y + boss.height // 2),
+                                                         6, Main.GREEN, 10))
+                boss_projectiles_central.append(Projectile(round(boss.x + boss.width * (1 / 4)),
+                                                           round(boss.y + boss.height // 2, 10),
+                                                           6, Main.GREEN, 10))
+                boss_projectiles_central.append(Projectile(round(boss.x + boss.width * (3 / 4)),
+                                                           round(boss.y + boss.height // 2),
+                                                           6, Main.GREEN, 10))
             if boss_shoot_central == 20:
-                boss_projectiles.append(Projectile(round(boss.x + boss.width * (1/2)),
-                                        round(boss.y + boss.height * (3/4)),
-                                        20, Main.ORANGE))
-            for boss_projectile in boss_projectiles:
+                boss_projectiles_central.append(Projectile(round(boss.x + boss.width * (1/2)),
+                                                round(boss.y + boss.height * (3/4)),
+                                                20, Main.ORANGE, 20))
+            for boss_projectile in boss_projectiles_left:
+                if 0 < boss_projectile.y > 0:
+                    boss_projectile.x -= boss_projectile.vel / 1.5
+                    boss_projectile.y += boss_projectile.vel
+                else:
+                    enemy_projectiles.pop(enemy_projectiles.index(boss_projectile))
+            for boss_projectile in boss_projectiles_right:
+                if 0 < boss_projectile.y > 0:
+                    boss_projectile.x += boss_projectile.vel / 1.5
+                    boss_projectile.y += boss_projectile.vel
+                else:
+                    enemy_projectiles.pop(enemy_projectiles.index(boss_projectile))
+            for boss_projectile in boss_projectiles_central:
                 if 0 < boss_projectile.y > 0:
                     boss_projectile.y += boss_projectile.vel
                 else:
@@ -260,7 +289,7 @@ def main_loop():
             Main.shoot.play()
             if len(projectiles) < 10:  # up to 10 projectiles on screen at the same moment
                 projectiles.append(Projectile(round(player.x + player.width // 2),
-                                              round(player.y + player.height // 2), 4, (255, 128, 0)))
+                                              round(player.y + player.height // 2), 4, (255, 128, 0), 10))
             can_shoot += 1
         if keys[pygame.K_ESCAPE]:
             run = False
@@ -277,7 +306,8 @@ def main_loop():
 
         # refresh screen
         if paused is False:
-            redraw_game_window(player, enemy, special_alien, projectiles, enemy_projectiles, lives, alive, covers, boss, boss_projectiles)
+            redraw_game_window(player, enemy, special_alien, projectiles, enemy_projectiles, lives, alive, covers, boss,
+                               boss_projectiles_left, boss_projectiles_right, boss_projectiles_central)
 
 
 menu()

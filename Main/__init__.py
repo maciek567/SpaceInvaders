@@ -16,7 +16,7 @@ DARKER_YELLOW = (200, 200, 0)
 BLUE = (66, 155, 254)
 ORANGE = (255, 128, 0)
 
-screenWidth = 1280
+screenWidth = 1480
 screenHeight = 720
 
 win = pygame.display.set_mode((screenWidth, screenHeight))
