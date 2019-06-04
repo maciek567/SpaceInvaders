@@ -16,9 +16,9 @@ DARKER_YELLOW = (200, 200, 0)
 BLUE = (66, 155, 254)
 ORANGE = (255, 128, 0)
 
-screenWidth = 1480
+screenWidth = 1280
 screenHeight = 720
-
+alien_size = 60
 win = pygame.display.set_mode((screenWidth, screenHeight))
 pygame.display.set_caption("Space Invaders")
 clock = pygame.time.Clock()

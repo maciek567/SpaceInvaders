@@ -1,6 +1,7 @@
 import pygame
 import random
 import Main
+from view.game_over import game_over
 
 
 class Enemy(object):
@@ -46,6 +47,8 @@ class Enemy(object):
             else:
                 self.y += 20
                 self.vel = self.vel * -1
+        if self.y + Main.alien_size > 0.8 * Main.screenHeight:
+            game_over()
 
     # for every foe check collision with projectiles on screen
     def check_collision(self, projectiles):

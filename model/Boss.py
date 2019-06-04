@@ -15,7 +15,7 @@ class Boss(object):
         self.start = start
         self.end = end
         self.path = [self.start, self.end]  # where our enemy starts and finishes his path.
-        self.vel = 7
+        self.vel = 6
         self.time_to_recovery = 0
         self.protected = False
 

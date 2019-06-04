@@ -116,7 +116,7 @@ def redraw_game_window(player, enemy, special_alien, projectiles, enemy_projecti
 
         if boss.time_to_recovery > 0:
             boss.time_to_recovery -= 1
-            if(boss.time_to_recovery == 0):
+            if boss.time_to_recovery == 0:
                 boss.protected = False
 
     if alive < 1:
@@ -162,7 +162,7 @@ def main_loop():
     enemy = [[None] * 10, [None] * 10, [None] * 10]
     alive = len(enemy) * len(enemy[0])
     enemy = draw_block_of_enemies(enemy)
-    special_alien = SpecialEnemy(0, 60, 60, 60, 0, Main.screenWidth, False)
+    special_alien = SpecialEnemy(0, 60, Main.alien_size, Main.alien_size, 0, Main.screenWidth, False)
     boss = Boss(10, 100, 320, 100, 30, Main.screenWidth - 330)
 
     lives = [None, None, None]
@@ -184,7 +184,7 @@ def main_loop():
     pygame.mixer.music.rewind()
     pygame.mixer.music.play()
 
-    if Main.LEVEL == 1:
+    if Main.LEVEL == 3:
         Main.BOSS = True
     else:
         Main.BOSS = False
